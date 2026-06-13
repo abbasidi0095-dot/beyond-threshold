@@ -327,8 +327,8 @@
 </div>
 
 <div class="video-stage">
-  <video id="scrollVideo" preload="auto" muted playsinline disablepictureinpicture disableremoteplayback x-webkit-airplay="deny"
-    poster="https://d8j0ntlcm91z4.cloudfront.net/user_3F62erzqtgbUOXxf8Xojxkoa4vA/hf_20260613_202224_b09d78dc-1161-4375-86b9-1428e70db34f.png">
+  <video id="scrollVideo" preload="auto" muted playsinline
+    poster="poster.jpg">
     <source src="door_smooth.mp4" type="video/mp4">
   </video>
   <div class="overlay"></div>
@@ -518,6 +518,7 @@ video.addEventListener('loadedmetadata', () => {
 
 // Show as soon as the first frame is available (faster than canplaythrough)
 video.addEventListener('loadeddata', () => {
+  clearTimeout(loadTimeout);
   markReady();
 });
 
@@ -526,16 +527,21 @@ const loadTimeout = setTimeout(() => {
   if (!isReady) {
     markReady();
   }
-}, 8000);
+}, 6000);
 
 video.addEventListener('canplaythrough', () => {
   clearTimeout(loadTimeout);
   markReady();
 });
 
-video.addEventListener('error', () => {
+video.addEventListener('error', (e) => {
   clearTimeout(loadTimeout);
+  console.error('Video error:', e);
   loader.innerHTML = '<span>Could not load video</span>';
+});
+
+video.addEventListener('stalled', () => {
+  console.warn('Video stalled');
 });
 
 window.addEventListener('scroll', onScroll, { passive: true });
@@ -543,6 +549,9 @@ window.addEventListener('scroll', onScroll, { passive: true });
 // Initial state
 updateTargetFromScroll();
 handleFadeIns();
+
+// Explicitly trigger loading (important for mobile)
+video.load();
 </script>
 
 </body>
