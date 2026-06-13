@@ -495,14 +495,7 @@ function onScroll() {
   }
 }
 
-video.addEventListener('loadedmetadata', () => {
-  duration = video.duration;
-  video.pause();
-  targetTime = 0;
-  updateTargetFromScroll();
-});
-
-video.addEventListener('canplaythrough', () => {
+function markReady() {
   if (isReady) return;
   isReady = true;
   video.classList.add('ready');
@@ -514,9 +507,34 @@ video.addEventListener('canplaythrough', () => {
     lastFrameTime = performance.now();
     requestAnimationFrame(smoothSeek);
   }
+}
+
+video.addEventListener('loadedmetadata', () => {
+  duration = video.duration;
+  video.pause();
+  targetTime = 0;
+  updateTargetFromScroll();
+});
+
+// Show as soon as the first frame is available (faster than canplaythrough)
+video.addEventListener('loadeddata', () => {
+  markReady();
+});
+
+// Fallback in case loadeddata stalls
+const loadTimeout = setTimeout(() => {
+  if (!isReady) {
+    markReady();
+  }
+}, 8000);
+
+video.addEventListener('canplaythrough', () => {
+  clearTimeout(loadTimeout);
+  markReady();
 });
 
 video.addEventListener('error', () => {
+  clearTimeout(loadTimeout);
   loader.innerHTML = '<span>Could not load video</span>';
 });
 
